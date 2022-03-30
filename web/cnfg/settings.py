@@ -37,9 +37,16 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_countries",
 ]
 
-PROJECT_APPS = ["users.apps.UsersConfig"]
+THIRD_PARTY_APPS = ["django_countries"]
+
+PROJECT_APPS = [
+    "core.apps.CoreConfig",
+    "rooms.apps.RoomsConfig",
+    "users.apps.UsersConfig",
+]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS
 
