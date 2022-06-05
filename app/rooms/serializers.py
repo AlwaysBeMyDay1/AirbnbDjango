@@ -43,3 +43,4 @@ class WriteRoomSerializer(serializers.Serializer):
         else:
             return data
             # 여기서 return한 data가 위의 create로 전달됨
+
