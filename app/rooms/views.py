@@ -1,6 +1,8 @@
+from django import http
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from uritemplate import partial
 from .models import Room
 from .serializers import ReadRoomSerializer, WriteRoomSerializer
 
@@ -39,8 +41,22 @@ class RoomView(APIView):
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-    def put(self, request):
-        pass
+    def put(self, request, pk):
+        room = self.get_room(pk)
+        if room is not None:
+            if room.user != request.user:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+            serializer = WriteRoomSerializer(room, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # if, 'room'이라는 instance가 없다면 drf는 이를 create로 인식
+            # 즉, instance를 통해 Write 메소드의 종류(create, put, push,,)를 결정
+            return Response(serializer)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
 
     def delete(self, request, pk):
         # first, get room
