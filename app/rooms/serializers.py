@@ -22,3 +22,6 @@ class WriteRoomSerializer(serializers.Serializer):
     check_out = serializers.TimeField(default="00:00:00")
     instant_book = serializers.BooleanField(default=False)
     # http://127.0.0.1:8000/api/v1/rooms/?name=Dan,address=%E3%85%87%E3%85%87%E3%84%B9%E3%85%87%E3%85%81%E3%85%87,price=23,beds=2,lat=21.42,lng=23.52
+
+    def create(self, validated_data):
+        return Room.objects.create(**validated_data)
