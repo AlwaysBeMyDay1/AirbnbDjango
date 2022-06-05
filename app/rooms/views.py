@@ -32,7 +32,7 @@ def rooms_view(request):
             # Response에 전달하면 응답창에서 Read 가능
             return Response(data = read_room_serializer,status=status.HTTP_200_OK)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(data = room_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # RetrieveAPIView : 하나의 데이터만을 보고 싶을 때 사용하는 방법
 class SeeRoomView(RetrieveAPIView):

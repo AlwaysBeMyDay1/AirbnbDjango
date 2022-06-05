@@ -27,7 +27,6 @@ class Room(CoreModel):
 
 
 class Photo(CoreModel):
-
     file = models.ImageField()
     room = models.ForeignKey(
         "rooms.Room", related_name="photos", on_delete=models.CASCADE
