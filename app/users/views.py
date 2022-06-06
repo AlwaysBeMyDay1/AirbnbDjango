@@ -8,6 +8,7 @@ from .models import User
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
+    
     def get(self, request):
         read_me_serializer = ReadUserSerializer(request.user).data
         return Response(data=read_me_serializer)
@@ -19,21 +20,13 @@ class MeView(APIView):
         except User.DoesNotExist:
             return None
 
-    def put(self, request, pk):
-        me = self.get_me(pk)
-        if me is not None:
-            if me == request.user:
-                serializer = WriteUserSerializer(me, data=request.data, partial=True)
-                if serializer.is_valid():
-                    me = serializer.save()
-                    read_me_serializer = ReadUserSerializer(me).data
-                    return Response(data=read_me_serializer, status=status.HTTP_200_OK)
-                return Response(serializer)
-            else:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+    def put(self, request):
+        serializer = WriteUserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response()
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
     def delete(self, request, pk):
         me = self.get_me(pk)
         if me is not None:
