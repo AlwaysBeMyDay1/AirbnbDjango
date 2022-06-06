@@ -2,23 +2,22 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from users.serializers import ReadUserSerializer, WriteUserSerializer
 from .models import User
 
 class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        read_me_serializer = ReadUserSerializer(request.user).data
+        return Response(data=read_me_serializer)
+    
     def get_me(self, pk):
         try:
             me = User.objects.get(pk=pk)
             return me
         except User.DoesNotExist:
             return None
-
-    def get(self, request):
-        if request.user.is_authenticated:
-            read_me_serializer = ReadUserSerializer(request.user).data
-            return Response(data=read_me_serializer)
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request, pk):
         me = self.get_me(pk)
