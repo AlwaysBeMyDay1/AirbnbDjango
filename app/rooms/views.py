@@ -1,8 +1,6 @@
-from django import http
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from uritemplate import partial
 from .models import Room
 from .serializers import ReadRoomSerializer, WriteRoomSerializer
 
@@ -48,7 +46,9 @@ class RoomView(APIView):
                 return Response(status=status.HTTP_403_FORBIDDEN)
             serializer = WriteRoomSerializer(room, data=request.data, partial=True)
             if serializer.is_valid():
-                serializer.save()
+                room = serializer.save()
+                read_room_serializer = ReadRoomSerializer(room).data
+                return Response(read_room_serializer)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             # if, 'room'이라는 instance가 없다면 drf는 이를 create로 인식
