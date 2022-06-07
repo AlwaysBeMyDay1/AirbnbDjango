@@ -3,16 +3,12 @@ from users.serializers import RelatedUserSerializer
 from .models import Room
 
 
-class ReadRoomSerializer(serializers.ModelSerializer):
+class RoomSerializer(serializers.ModelSerializer):
     user = RelatedUserSerializer()
     class Meta:
         model = Room
-        exclude = ("modified",)
-
-class WriteRoomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Room
-        exclude = ('user', 'modified', 'created')
+        exclude = ("modified", )
+        read_only_fields = ["id", "user", "created", "updated"]
     
     def validate(self, data):
         # 인스턴스가 있으면 -> update -> 모든 param 수정 안 할 수 있음 -> need default
