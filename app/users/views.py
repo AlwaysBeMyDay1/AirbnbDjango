@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
+from rooms.serializers import RoomSerializer
 from users.serializers import ReadUserSerializer, WriteUserSerializer
 from .models import User
 
@@ -45,3 +46,18 @@ def user_detail(request, pk):
         return Response(ReadUserSerializer(user).data)
     except User.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+# my favs에는 두(세) 가지 동작이 필요
+# put(add & remove) && get
+class FavsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        print(request.GET.get('user'))
+        user = request.user
+        # user가 가지고 있는 room 가져오기
+        rooms = RoomSerializer(user.favs.all(), many=True).data
+        return Response(rooms)
+
+    def put(self, request):
+        pass
