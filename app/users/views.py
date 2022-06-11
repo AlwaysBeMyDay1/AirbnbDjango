@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rooms.serializers import RoomSerializer
 from users.serializers import ReadUserSerializer, WriteUserSerializer
 from .models import User
+from rooms.models import Room
 
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -60,4 +61,16 @@ class FavsView(APIView):
         return Response(rooms)
 
     def put(self, request):
-        pass
+        pk = request.data.get("pk", None)
+        user = request.user
+        if pk is not None:
+            try:
+                room = Room.objects.get(pk=pk)
+                if room in user.favs.all():
+                    user.favs.remove(room)
+                else:
+                    user.favs.add(room)
+                return Response()
+            except Room.DoesNotExist:
+                pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
