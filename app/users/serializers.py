@@ -17,30 +17,12 @@ class RelatedUserSerializer(serializers.ModelSerializer):
             "favs",
         )
 
-
-class ReadUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'avatar',
-            'superhost'
-        )
+        fields = ('username', 'first_name', 'last_name', 'email')
+        read_only_fields = ['avatar', 'superhost']
 
-# views에서는 어떨 때는 자동이 좋고, 어떨 땐 아니지만
-# serializer에서는 대개 자동이 좋다.
-class WriteUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'first_name',
-            'last_name',
-            'email'
-        )
-
-    def validate_first_name(self, value):
-        return value.upper()
+    def validate(self, data):
+        data.first_name = data.first_name.upper()
+        return data

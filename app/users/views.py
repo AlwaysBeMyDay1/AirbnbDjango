@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rooms.serializers import RoomSerializer
-from users.serializers import ReadUserSerializer, WriteUserSerializer
+from users.serializers import UserSerializer
 from .models import User
 from rooms.models import Room
 
@@ -12,7 +12,7 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        read_me_serializer = ReadUserSerializer(request.user).data
+        read_me_serializer = UserSerializer(request.user).data
         return Response(data=read_me_serializer)
     
     def get_me(self, pk):
@@ -23,7 +23,7 @@ class MeView(APIView):
             return None
 
     def put(self, request):
-        serializer = WriteUserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response()
@@ -44,7 +44,7 @@ class MeView(APIView):
 def user_detail(request, pk):
     try:
         user = User.objects.get(pk=pk)
-        return Response(ReadUserSerializer(user).data)
+        return Response(UserSerializer(user).data)
     except User.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
