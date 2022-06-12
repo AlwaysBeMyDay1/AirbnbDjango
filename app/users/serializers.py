@@ -20,9 +20,13 @@ class RelatedUserSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email')
-        read_only_fields = ['avatar', 'superhost']
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'avatar', 'superhost')
+        read_only_fields = ['id', 'avatar', 'superhost']
 
-    def validate(self, data):
-        data.first_name = data.first_name.upper()
-        return data
+    def validate_last_name(self, value):
+        print(value)
+        return value.upper()
+    # ⬇️ 아래처럼은 데이터 수정이 안 되는 것으로 파악됨
+    # def validate(self, data):
+    #     data.last_name = data.last_name.upper()
+    #     return data
