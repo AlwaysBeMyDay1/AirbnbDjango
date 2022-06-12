@@ -1,3 +1,6 @@
+import jwt
+from django.contrib.auth import authenticate
+from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -89,3 +92,16 @@ def user_detail(request, pk):
     except User.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
         
+@api_view(["POST"])
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    if not username or not password:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    user = authenticate(username=username, password=password)
+    if user:
+        encoded_jwt = jwt.encdoe({'id':user.pk}, settings.SECRET_KEY, algorithm='HS256')
+    else:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    
