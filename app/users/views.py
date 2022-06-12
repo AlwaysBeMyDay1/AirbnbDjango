@@ -8,6 +8,15 @@ from users.serializers import UserSerializer
 from .models import User
 from rooms.models import Room
 
+class UsersView(APIView):
+    def post(self, request):
+        user_serializer = UserSerializer(data=request.data)
+        if user_serializer.is_valid():
+            new_user = user_serializer.save()
+            return Response(data=UserSerializer(new_user).data)
+        else:
+            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -40,13 +49,6 @@ class MeView(APIView):
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-@api_view(["GET"])
-def user_detail(request, pk):
-    try:
-        user = User.objects.get(pk=pk)
-        return Response(UserSerializer(user).data)
-    except User.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
 
 # my favs에는 두(세) 가지 동작이 필요
 # put(add & remove) && get
@@ -79,4 +81,11 @@ class FavsView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
+@api_view(["GET"])
+def user_detail(request, pk):
+    try:
+        user = User.objects.get(pk=pk)
+        return Response(UserSerializer(user).data)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
         
