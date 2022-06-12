@@ -50,7 +50,7 @@ def user_detail(request, pk):
 
 # my favs에는 두(세) 가지 동작이 필요
 # put(add & remove) && get
-class FavsView(APIView):
+class FavsView(APIView, id):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -60,17 +60,24 @@ class FavsView(APIView):
         rooms = RoomSerializer(user.favs.all(), many=True).data
         return Response(rooms)
 
-    def put(self, request):
-        pk = request.data.get("pk", None)
+    def put(self, request, id):
+        print(id)
+        # id를 가지는 room을 찾고
+        room = Room.objects.get(pk=id)
         user = request.user
-        if pk is not None:
-            try:
-                room = Room.objects.get(pk=pk)
-                if room in user.favs.all():
-                    user.favs.remove(room)
-                else:
-                    user.favs.add(room)
-                return Response()
-            except Room.DoesNotExist:
-                pass
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        if room:
+            # room이 있다면 favs에 해당 id 룸이 있는지 확인하고
+            fav = user.favs.get(id=id)
+            # 없으면 favs에 add
+            if fav :
+                user.favs.add(room)
+            # 있으면 favs로부터 remove
+            else :
+                user.favs.remove(room)
+            return Response()
+        # room이 없다면 error
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+        
