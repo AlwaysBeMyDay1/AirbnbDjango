@@ -1,13 +1,19 @@
 from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Room
 from .serializers import RoomSerializer
 
 class RoomsView(APIView):
     def get(self, request):
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
         rooms = Room.objects.all()
-        room_serializer = RoomSerializer(rooms, many=True).data
+        results = paginator.paginate_queryset(rooms, request)
+        # request를 parsing한다는 건 paginator가 page query argument를 찾아내야 한다는 뜻
+        room_serializer = RoomSerializer(results, many=True).data
         return Response(room_serializer)
 
     def post(self, request):
@@ -58,7 +64,6 @@ class RoomView(APIView):
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-
     def delete(self, request, pk):
         # first, get room
         room = self.get_room(pk)
@@ -70,5 +75,12 @@ class RoomView(APIView):
         else :
             room.delete()
             return Response(status=status.HTTP_200_OK)
-            
 
+@api_view(['GET'])     
+def room_search(request):
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    rooms = Room.objects.filter()
+    results = paginator.paginate_queryset(rooms, request)
+    serializer = RoomSerializer(results, many=True)
+    return Response(serializer)
