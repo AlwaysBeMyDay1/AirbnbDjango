@@ -6,10 +6,14 @@ from rest_framework.views import APIView
 from .models import Room
 from .serializers import RoomSerializer
 
+
+class OwnPagination(PageNumberPagination):
+    page_size = 20
+
+
 class RoomsView(APIView):
     def get(self, request):
-        paginator = PageNumberPagination()
-        paginator.page_size = 20
+        paginator = OwnPagination()
         rooms = Room.objects.all()
         results = paginator.paginate_queryset(rooms, request)
         # request를 parsing한다는 건 paginator가 page query argument를 찾아내야 한다는 뜻
@@ -27,7 +31,6 @@ class RoomsView(APIView):
             return Response(data = read_room_serializer,status=status.HTTP_200_OK)
         else:
             return Response(data = room_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class RoomView(APIView):
@@ -78,8 +81,7 @@ class RoomView(APIView):
 
 @api_view(['GET'])     
 def room_search(request):
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
+    paginator = OwnPagination()
     rooms = Room.objects.filter()
     results = paginator.paginate_queryset(rooms, request)
     serializer = RoomSerializer(results, many=True).data
