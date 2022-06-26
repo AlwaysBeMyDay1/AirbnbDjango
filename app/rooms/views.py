@@ -14,7 +14,7 @@ class RoomsView(APIView):
         results = paginator.paginate_queryset(rooms, request)
         # request를 parsing한다는 건 paginator가 page query argument를 찾아내야 한다는 뜻
         room_serializer = RoomSerializer(results, many=True).data
-        return Response(room_serializer)
+        return paginator.get_paginated_response(room_serializer)
 
     def post(self, request):
         if not request.user.is_authenticated:
@@ -82,5 +82,5 @@ def room_search(request):
     paginator.page_size = 10
     rooms = Room.objects.filter()
     results = paginator.paginate_queryset(rooms, request)
-    serializer = RoomSerializer(results, many=True)
-    return Response(serializer)
+    serializer = RoomSerializer(results, many=True).data
+    return paginator.get_paginated_response(serializer)
