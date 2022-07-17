@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'avatar', 'superhost')
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'password', 'avatar', 'superhost', 'favs')
         read_only_fields = ['id', 'avatar', 'superhost']
 
     def validate_last_name(self, value):
