@@ -4,14 +4,14 @@ from .models import Room
 
 
 class RoomSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = UserSerializer(read_only=True)
     is_fav = serializers.SerializerMethodField()
     # get_is_fav가 싫다면, method_name=""설정 가능
 
     class Meta:
         model = Room
         exclude = ("modified", )
-        read_only_fields = ["user", "id", "created", "updated"]
+        read_only_fields = ["id", "created", "updated"]
     
     def validate(self, data):
         # 인스턴스가 있으면 -> update -> 모든 param 수정 안 할 수 있음 -> need default
@@ -42,3 +42,8 @@ class RoomSerializer(serializers.ModelSerializer):
                 return obj in user.favs.all()
         return True
         
+    def create(self, validated_data):
+        # ModelViewSet에는 get_serializer_context() 메소드가 있고, 거기서 자동으로 request를 context로 전달한다
+        request = self.context.request
+        room = Room.objects.create(**validated_data, user=request.user)
+        return room
