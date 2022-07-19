@@ -1,57 +1,46 @@
 import jwt
 from django.contrib.auth import authenticate
 from django.conf import settings
+from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rooms.serializers import RoomSerializer
 from users.serializers import UserSerializer
 from .models import User
+from .permissions import IsSelf
 from rooms.models import Room
 
-class UsersView(APIView):
-    def post(self, request):
-        user_serializer = UserSerializer(data=request.data)
-        if user_serializer.is_valid():
-            new_user = user_serializer.save()
-            return Response(data=UserSerializer(new_user).data)
+
+class UsersViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAdminUser]
+        elif self.action == 'create' or self.action == 'retrieve':
+            permission_classes = [AllowAny]
         else:
-            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            permission_classes = [IsSelf]
+        return [permission() for permission in permission_classes]
 
-class MeView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        read_me_serializer = UserSerializer(request.user).data
-        return Response(data=read_me_serializer)
-    
-    def get_me(self, pk):
-        try:
-            me = User.objects.get(pk=pk)
-            return me
-        except User.DoesNotExist:
-            return None
-
-    def put(self, request):
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response()
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                
-    def delete(self, request, pk):
-        me = self.get_me(pk)
-        if me is not None:
-            if request.user == me:
-                me.delete()
-                return Response(status=status.HTTP_200_OK)
-            else:
-                return Response(status=status.HTTP_403_FORBIDDEN)
+    @action(methods=['post'], detail=False)
+    def login(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        if not username or not password:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        user = authenticate(username=username, password=password)
+        if user:
+            encoded_jwt = jwt.encode({'pk':user.pk}, settings.SECRET_KEY, algorithm='HS256')
+            return Response(data={"token":encoded_jwt, "id":user.pk})
         else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+    
 
 # my favs에는 두(세) 가지 동작이 필요
 # put(add & remove) && get
@@ -82,27 +71,3 @@ class FavsView(APIView):
         # id가 없다면 error
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(["GET"])
-def user_detail(request, pk):
-    try:
-        user = User.objects.get(pk=pk)
-        return Response(UserSerializer(user).data)
-    except User.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-        
-@api_view(["POST"])
-def login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    if not username or not password:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    user = authenticate(username=username, password=password)
-    if user:
-        encoded_jwt = jwt.encode({'pk':user.pk}, settings.SECRET_KEY, algorithm='HS256')
-        return Response(data={"token":encoded_jwt})
-    else:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-    
