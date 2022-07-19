@@ -21,7 +21,7 @@ class UsersViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action == 'list':
             permission_classes = [IsAdminUser]
-        elif self.action == 'create' or self.action == 'retrieve':
+        elif self.action == 'create' or self.action == 'retrieve' or self.action == 'favs':
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsSelf]
@@ -40,24 +40,21 @@ class UsersViewSet(ModelViewSet):
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    
-
-# my favs에는 두(세) 가지 동작이 필요
-# put(add & remove) && get
-class FavsView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        print(request.GET.get('user'))
-        user = request.user
-        # user가 가지고 있는 room 가져오기
-        rooms = RoomSerializer(user.favs.all(), many=True).data
+    # detail=True : users/1/favs && detail=False : users/favs
+    # detail=True면 항상 pk를 action의 인자로 전달, 즉 pk를 인자로 추가해야함
+    @action(detail=True)
+    def favs(self, request, pk):
+        # request.user에는 favs에 관한 정보가 없다, get_object로 화면에 출력되는 user 정보 가져와야함.
+        user = self.get_object()
+        rooms = RoomSerializer(user.favs.all(), many=True, context={'request':request}).data
         return Response(rooms)
-
-    def put(self, request):
-        # request.data에서 id값 가져오기
+    
+    # 위는 favs/ GET 메소드
+    # 만약 favs/ PUT 메소드를 만들려면
+    @favs.mapping.put
+    def update_favs(self, request, pk):
         id = request.data.get('id', None)
-        user = request.user
+        user = self.get_object()
         if id:
             try:
                 room = Room.objects.get(id=id)
